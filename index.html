@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
         <title>D3 tutorial</title>  
-        <script src="http://d3js.org/d3.v7.min.js" charset="utf-8"></script> 
+        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> 
         <!-- <script src="https://unpkg.com/topojson@3"></script> -->
         <script src="http://d3js.org/topojson.v1.min.js"></script>
         <script src="http://d3js.org/queue.v1.min.js"></script>
@@ -21,39 +21,49 @@
         </style>
     </head> 
     <body>
-      <h1>US</h1>
+      <h1>US Blocks</h1>
       <div id="map"></div>
       <script>
-        var width = 1160,
+        var width = 1024,
         height = 800;
         
         var svg = d3.select("body")
                 .append("svg")
                 .attr("width", width)
-                .attr("height", height);            
+                .attr("height", height);    
 
-        d3.json("tl_2020_us_state.json", function(error, us) {
+        // testing with smaller json file
+        // d3.json("tl_2020_us_county.json", function(error, us) {
+        d3.json("tl_2020_25MA_tabblock20.json", function(error, us) {
             if (error) return console.error(error);
 
-            console.log(us.objects);
+            // testing with smaller json file
+            // var subunits = topojson.feature(us, us.objects.tl_2020_us_county).features;
+            var subunits = topojson.feature(us, us.objects.tl_2020_25_tabblock20).features;
             
-            var subunits = topojson.feature(us, us.objects.tl_2020_us_state).features;
+            console.log(subunits[0].properties)
+            subunits.sort(function(s1, s2) {
+                return parseFloat(s2.properties["INTPTLON20"].slice(1)) - parseFloat(s1.properties["INTPTLON20"].slice(1))
+            });
 
+            // number of blocks to display
+            var tmpunits = [];
+            for (let i = 0; i < subunits.length/100; i++) {
+                tmpunits.push(subunits[i]);
+            }
+        
             var projection = d3.geo.albersUsa()
-                .translate([width / 2, height / 2]);
-                //.scale(100);
+                .translate([width/2-700, height/2]) // +700 for CA
+                .scale(3000);
                 
-            var path = d3.geo.path()
+            var map_coord = d3.geo.path()
                 .projection(projection);
-            
+
             svg.selectAll("path")
-                .data(subunits)
+                .data(tmpunits)
                 .enter()
                 .append("path")
-                .attr("d", path);
-
-            
-            
+                .attr("d", map_coord); // subunit => path(subunit)
 
             console.log('hi');
         });     
@@ -63,89 +73,8 @@
     </body>
 </html>
 
-    <!-- <body>
-        <script>
-            d3.selectAll('p')
-                .data(US_state_2020.json)
-                .enter()
-                .append('p')
-                .text(data=>data);
-            console.log(data);
-        </script>
-        
-    </body> 
-</html>
 
-        
-
-
-
-
-
-        
-        var projection = d3.geo.albers()
-            .center([0, 37.8])
-            .rotate([85.8,0])
-            .scale(8000)
-            .translate([width / 2, height / 2]);
-    
-        var geoPath = d3.geo.path()
-            .projection(projection);
-        
-        queue()
-            .defer(d3.json, "US_state_2020.json")
-            .await(ready);
-          
-        function ready(error, counties){
-            
-             svg.append("g")
-                .selectAll("path")
-                .data( topojson.feature(counties, counties.objects.counties).features)
-                .enter()
-                .append("path")
-                .attr( "d", geoPath )
-                .attr("class","county");  
-            
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-        var width = 900,
-                height = 600;
-
-            var svg = d3.select("#map-container").append("svg")
-                .attr("width", width)
-                .attr("height", height);
-
-            var projection = d3.geo.mercator() // mercator makes it easy to center on specific lat/long
-                .scale(50000)
-                .center([-73.94, 40.70]); // long, lat of NYC
-
-            var pathGenerator = d3.geo.path()
-                .projection(projection);
-
-            d3.json("./US_state_2020.json", function(error, boroughs) {
-                if (error) return console.error(error);
-                console.log(boroughs.objects.US_state_2020);
-
-                svg.selectAll("path")
-                    .data(boroughs.features)
-                  .enter().append("path")
-                    .attr("class", "boroughs")
-                    .attr("d", pathGenerator);
-
-            });
-
+    <!-- 
             var addPointsToMap = function(crimeData) {
                 var colorScale  = d3.scale.category10();
 
