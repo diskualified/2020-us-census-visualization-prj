@@ -3,11 +3,13 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-        <title>D3 tutorial</title>  
-        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> 
+        <title>D3 Census Map</title>  
+        <script src="http://d3js.org/d3.v4.min.js" charset="utf-8"></script> 
         <!-- <script src="https://unpkg.com/topojson@3"></script> -->
         <script src="http://d3js.org/topojson.v1.min.js"></script>
         <script src="http://d3js.org/queue.v1.min.js"></script>
+        <!-- <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.8.3/jquery.csv.min.js"></script> -->
         <!-- <script src="App.js"></script> -->
         <style>
             svg {
@@ -33,40 +35,107 @@
                 .attr("height", height);    
 
         // testing with smaller json file
-        // d3.json("tl_2020_us_county.json", function(error, us) {
-        d3.json("tl_2020_25MA_tabblock20.json", function(error, us) {
+        d3.json("tl_2020_us_county.json", function(error, us) {
+        // d3.json("tl_2020_25MA_tabblock20.json", function(error, us) {
             if (error) return console.error(error);
 
             // testing with smaller json file
-            // var subunits = topojson.feature(us, us.objects.tl_2020_us_county).features;
-            var subunits = topojson.feature(us, us.objects.tl_2020_25_tabblock20).features;
+            var subunits = topojson.feature(us, us.objects.tl_2020_us_county).features;
+            // var subunits = topojson.feature(us, us.objects.tl_2020_25_tabblock20).features;
             
-            console.log(subunits[0].properties)
+            // console.log(subunits[0].properties)
             subunits.sort(function(s1, s2) {
-                return parseFloat(s2.properties["INTPTLON20"].slice(1)) - parseFloat(s1.properties["INTPTLON20"].slice(1))
+                return parseFloat(s1.properties["INTPTLON"].slice(1)) - parseFloat(s2.properties["INTPTLON"].slice(1))
+                // return parseFloat(s1.properties["INTPTLON20"].slice(1)) - parseFloat(s2.properties["INTPTLON20"].slice(1))
             });
 
             // number of blocks to display
             var tmpunits = [];
-            for (let i = 0; i < subunits.length/100; i++) {
-                tmpunits.push(subunits[i]);
+            for (let i = 0; i < subunits.length/25; i++) {
+                if (subunits[i].properties["STATEFP"] == '25' && (subunits[i].properties["COUNTYFP"] == '025' || subunits[i].properties["COUNTYFP"] == '017')) {
+                    tmpunits.push(subunits[i]);
+                }
             }
         
-            var projection = d3.geo.albersUsa()
-                .translate([width/2-700, height/2]) // +700 for CA
-                .scale(3000);
+            var projection = d3.geoAlbersUsa()
+                .translate([width/2 - 1700, height/2 + 400])
+                .scale(5000);
+                //.translate([width/2-2000, height/2 + 300]) // +700 for CA
+                //.scale(5000);
                 
-            var map_coord = d3.geo.path()
+            var map_coord = d3.geoPath()
                 .projection(projection);
 
             svg.selectAll("path")
                 .data(tmpunits)
                 .enter()
                 .append("path")
-                .attr("d", map_coord); // subunit => path(subunit)
+                .attr("d", map_coord); // map_coord same as: d => map_coord(d)
 
-            console.log('hi');
-        });     
+            console.log('rendered boundaries');
+
+            
+
+            // get racial data for suffolk and middlesex counties
+            let csvdata = [];
+            d3.csv("county.csv", function(data) {
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i]["STATE"] == "Massachusetts" && (data[i]["COUNTY"] == "Suffolk County" || data[i]["COUNTY"] == "Middlesex County")) {
+                        csvdata.push(data[i]);
+                    }                     
+                }
+                console.log("csvdata 1st elt: ", csvdata[0]);
+                console.log("csvdata len inside bracket: ", csvdata.length);
+            });
+            console.log("csvdata len outside bracket: ", csvdata.length);
+
+
+            let dots = [];
+            function genDotCoord (d) {
+                let halfway = Math.floor(d.geometry.coordinates["0"].length/2);
+                let max = d.geometry.coordinates["0"][halfway];
+                let min = d.geometry.coordinates["0"][0];
+                let coordx = Math.random() * (max[0] - min[0]) + min[0];
+                let coordy = Math.random() * (max[1] - min[1]) + min[1];
+                while (!d3.geoContains(d, [coordx, coordy])) {
+                    console.log('nay');
+                    coordx = Math.random() * (max[0] - min[0]) + min[0];
+                    coordy = Math.random() * (max[1] - min[1]) + min[1];
+                }
+                let color = "rgb(0, 0, 255)";
+                console.log('yay');
+                return [coordx, coordy, color];
+            };
+
+            tmpunits.forEach(function(d) {
+                console.log("subunit: ", d);
+                for (let i = 0; i < csvdata.length; i++) {
+                    console.log(i);
+                    for (let j = 0; j < parseInt(csvdata[i]["U7B003"]); j++) {
+                        console.log(j);
+                        dots.push(genDotCoord(d));
+                    }
+                }
+                dots.push(genDotCoord(d));
+            });
+
+
+            svg.selectAll('circle')
+                .data(dots)
+                .enter()
+                .append('circle')
+                .style('fill', d => d[2])
+                .attr('r', 2)
+                .attr('transform', function(d) {return "translate(" + projection(d) + ")";});
+
+            console.log("Done");
+            // give coord to get pixel
+            // console.log(projection([-141.190,52.4739]));
+            // pixel to coord
+            // console.log(projection.invert([241.20395864818516, 649.6497666026178]));
+        });   
+        
+       
         
     
       </script>
