@@ -34,38 +34,33 @@
                 .attr("width", width)
                 .attr("height", height);    
 
-        // testing with smaller json file
+        // testing with smaller county json file
         d3.json("tl_2020_us_county.json", function(error, us) {
         // d3.json("tl_2020_25MA_tabblock20.json", function(error, us) {
             if (error) return console.error(error);
-
-            // testing with smaller json file
+            // subunits is all county/block boundaries
             var subunits = topojson.feature(us, us.objects.tl_2020_us_county).features;
             // var subunits = topojson.feature(us, us.objects.tl_2020_25_tabblock20).features;
-            
-            // console.log(subunits[0].properties)
-            subunits.sort(function(s1, s2) {
-                return parseFloat(s1.properties["INTPTLON"].slice(1)) - parseFloat(s2.properties["INTPTLON"].slice(1))
-                // return parseFloat(s1.properties["INTPTLON20"].slice(1)) - parseFloat(s2.properties["INTPTLON20"].slice(1))
-            });
-
-            // number of blocks to display
+            // choose which counties/blocks to display
             var tmpunits = [];
-            for (let i = 0; i < subunits.length/25; i++) {
-                if (subunits[i].properties["STATEFP"] == '25' && (subunits[i].properties["COUNTYFP"] == '025' || subunits[i].properties["COUNTYFP"] == '017')) {
+            for (let i = 0; i < subunits.length; i++) {
+                if (subunits[i].properties["STATEFP"] == '25') {
                     tmpunits.push(subunits[i]);
                 }
             }
-        
+            tmpunits.sort(function(s1, s2) {
+                // right to left
+                return parseFloat(s1.properties["INTPTLON"].slice(1)) - parseFloat(s2.properties["INTPTLON"].slice(1));
+                // return parseFloat(s1.properties["INTPTLON20"].slice(1)) - parseFloat(s2.properties["INTPTLON20"].slice(1))
+            });
+            console.log("len", tmpunits.length);
             var projection = d3.geoAlbersUsa()
-                .translate([width/2 - 1700, height/2 + 400])
-                .scale(5000);
+                .translate([width/2 - 2000, height/2 + 400])
+                .scale(6000);
                 //.translate([width/2-2000, height/2 + 300]) // +700 for CA
-                //.scale(5000);
-                
+                //.scale(5000);  
             var map_coord = d3.geoPath()
                 .projection(projection);
-
             svg.selectAll("path")
                 .data(tmpunits)
                 .enter()
@@ -74,61 +69,85 @@
 
             console.log('rendered boundaries');
 
-            
 
-            // get racial data for suffolk and middlesex counties
-            let csvdata = [];
-            d3.csv("county.csv", function(data) {
-                for (var i = 0; i < data.length; i++) {
-                    if (data[i]["STATE"] == "Massachusetts" && (data[i]["COUNTY"] == "Suffolk County" || data[i]["COUNTY"] == "Middlesex County")) {
-                        csvdata.push(data[i]);
-                    }                     
-                }
-                console.log("csvdata 1st elt: ", csvdata[0]);
-                console.log("csvdata len inside bracket: ", csvdata.length);
-            });
-            console.log("csvdata len outside bracket: ", csvdata.length);
-
-
+            // racial demographic data & dots for select counties
+            let csvdemographics = [];
             let dots = [];
-            function genDotCoord (d) {
-                let halfway = Math.floor(d.geometry.coordinates["0"].length/2);
-                let max = d.geometry.coordinates["0"][halfway];
-                let min = d.geometry.coordinates["0"][0];
-                let coordx = Math.random() * (max[0] - min[0]) + min[0];
-                let coordy = Math.random() * (max[1] - min[1]) + min[1];
-                while (!d3.geoContains(d, [coordx, coordy])) {
-                    console.log('nay');
-                    coordx = Math.random() * (max[0] - min[0]) + min[0];
-                    coordy = Math.random() * (max[1] - min[1]) + min[1];
+            function genDotCoord (d, maxx, maxy, minx, miny, c) {
+                let coordx = Math.random() * (maxx - minx) + minx;
+                let coordy = Math.random() * (maxy - miny) + miny;
+                let count = 0;
+                while (!d3.geoContains(d, [coordx, coordy]) && count < 50) {
+                    // console.log('nay');
+                    coordx = Math.random() * (maxx - minx) + minx;
+                    coordy = Math.random() * (maxy - miny) + miny;
+                    ++count;
                 }
-                let color = "rgb(0, 0, 255)";
-                console.log('yay');
+                if (count == 50) {
+                    console.log("Out of bounds");
+                    return false;
+                }
+                let color = c;
+                // console.log('yay');
                 return [coordx, coordy, color];
             };
 
-            tmpunits.forEach(function(d) {
-                console.log("subunit: ", d);
-                for (let i = 0; i < csvdata.length; i++) {
-                    console.log(i);
-                    for (let j = 0; j < parseInt(csvdata[i]["U7B003"]); j++) {
-                        console.log(j);
-                        dots.push(genDotCoord(d));
+            let load = function(error, data) {
+                // TODO: handle error case 
+                if (error) return console.warn(error);
+                // filtering demographic data for now for select counties
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i]["STATE"] == "Massachusetts") {
+                        csvdemographics.push(data[i]);
+                    }                     
+                }
+                csvdemographics.sort(function(s1, s2) {
+                    // right to left
+                    return parseFloat(s1["INTPTLON"].slice(1)) - parseFloat(s2["INTPTLON"].slice(1));
+                    // return parseFloat(s1.properties["INTPTLON20"].slice(1)) - parseFloat(s2.properties["INTPTLON20"].slice(1))
+                });
+                console.log("len2", csvdemographics.length);
+                // change tmpunits later to subunits
+                for (let i = 0; i < tmpunits.length; i++) {
+                    // county is used to get coordinates
+                    let county = tmpunits[i];                  
+                    console.log("index", i);
+                    console.log(county.geometry.coordinates["0"]);
+                    let maxx = Math.max(...county.geometry.coordinates["0"].map(o => o[0]));
+                    let maxy = Math.max(...county.geometry.coordinates["0"].map(o => o[1]));
+                    let minx = Math.min(...county.geometry.coordinates["0"].map(o => o[0]));
+                    let miny = Math.min(...county.geometry.coordinates["0"].map(o => o[1]));
+                    if (!maxx) {
+                        maxx = Math.max(...county.geometry.coordinates["0"][0].map(o => o[0]));
+                        maxy = Math.max(...county.geometry.coordinates["0"][0].map(o => o[1]));
+                        minx = Math.min(...county.geometry.coordinates["0"][0].map(o => o[0]));
+                        miny = Math.min(...county.geometry.coordinates["0"][0].map(o => o[1]));
+                    }
+                    console.log(maxx, maxy, minx, miny);
+                    // get corresponding racial demographic data
+                    for (let j = 0; j < parseInt(csvdemographics[i]["U7B003"])/2000; j++) {
+                        let color = "rgb(0, 0, 255)";
+                        let coord = genDotCoord(county, maxx, maxy, minx, miny, color);
+                        if (coord) dots.push(coord);
+                    }
+                    for (let j = 0; j < parseInt(csvdemographics[i]["U7B004"])/2000; j++) {
+                        let color = "rgb(255, 255, 0)";
+                        let coord = genDotCoord(county, maxx, maxy, minx, miny, color);
+                        if (coord) dots.push(coord);
                     }
                 }
-                dots.push(genDotCoord(d));
-            });
+                // plot dots
+                svg.selectAll('circle')
+                    .data(dots)
+                    .enter()
+                    .append('circle')
+                    .style('fill', data => data[2])
+                    .attr('r', 1)
+                    .attr('transform', function(data) {return "translate(" + projection(data) + ")";});
+            }
 
-
-            svg.selectAll('circle')
-                .data(dots)
-                .enter()
-                .append('circle')
-                .style('fill', d => d[2])
-                .attr('r', 2)
-                .attr('transform', function(d) {return "translate(" + projection(d) + ")";});
-
-            console.log("Done");
+            d3.csv("county.csv", load);
+           
             // give coord to get pixel
             // console.log(projection([-141.190,52.4739]));
             // pixel to coord
