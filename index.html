@@ -6,7 +6,9 @@
         <title>D3 Census Map</title>  
         <script src="http://d3js.org/d3.v4.min.js" charset="utf-8"></script> 
         <!-- <script src="https://unpkg.com/topojson@3"></script> -->
-        <script src="http://d3js.org/topojson.v1.min.js"></script>
+        <!-- <script src="http://d3js.org/topojson.v1.min.js"></script> -->
+        <script src="https://unpkg.com/topojson-client@3"></script>
+
         <script src="http://d3js.org/queue.v1.min.js"></script>
         <!-- <script src="http://code.jquery.com/jquery-latest.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.8.3/jquery.csv.min.js"></script> -->
@@ -16,7 +18,8 @@
         <!-- <script src="https://unpkg.com/kepler.gl/umd/keplergl.min.js"></script> -->
         <script type="text/javascript" src="dat.gui.min.js"></script>
         <script src="Load.js" defer></script>
-        <script src="App.js" defer></script>
+        <!-- <script src="App.js" defer></script> -->
+
         <style>
             svg {
                 background: white;
@@ -46,9 +49,12 @@
               width={width}
               height={height}/>
         );  -->
-      <!-- <script>
+      <canvas width = "1024" height = "800"></canvas>
+      <script>
         
-      </script> -->
+        //cx.strokeStyle = "red";
+        //cx.stroke();
+      </script>
     </body>
 </html>
 

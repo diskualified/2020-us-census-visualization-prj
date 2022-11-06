@@ -1,22 +1,62 @@
-var width = 1024,
-        height = 800;
+// import React, {Component} from 'react';
 
-        var svg = d3.select("body")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height);    
+// class Load extends Component {
+
+// }
+        var width = 1024,
+        height = 800;
+        let canvas = document.querySelector("canvas");
+        let cx = canvas.getContext("2d");
+        var projection = d3.geoAlbersUsa();
+        var globalUS;
+        let path = d3.geoPath().projection(projection).context(cx);
+        let dots;
+
+        function redraw(transform) {
+            cx.save();
+            if (transform) {
+            cx.clearRect(0, 0, width, height);
+            cx.translate(transform.x, transform.y);
+            cx.scale(transform.k, transform.k);
+            }
+            cx.beginPath();
+            // context.stroke(path2D);
+            path(topojson.mesh(globalUS));
+            cx.stroke();
+            for (let i = 0; i < dots.length; i++) {
+                cx.beginPath();
+                cx.fillStyle = dots[i][2];
+                let coord  = (projection(dots[i].slice(0,2)));
+                cx.arc(coord[0], coord[1], 1, 0, 7);
+                cx.fill();
+            }
+            cx.restore();
+            console.log("zoom");
+          }
+          
+        d3.select(cx.canvas).call(d3.zoom()
+            .scaleExtent([1, 8])
+            .on("zoom", function () { redraw(d3.event.transform); }), 
+        );
+
+        // var svg = d3.select("body")
+        //         .append("svg")
+        //         .attr("width", width)
+        //         .attr("height", height);    
 
         // testing with smaller county json file
         d3.json("tl_2020_us_county.json", function(error, us) {
         // d3.json("tl_2020_25MA_tabblock20.json", function(error, us) {
             if (error) return console.error(error);
+            globalUS = us;
             // subunits is all county/block boundaries
             var subunits = topojson.feature(us, us.objects.tl_2020_us_county).features;
             // var subunits = topojson.feature(us, us.objects.tl_2020_25_tabblock20).features;
             // choose which counties/blocks to display
             var tmpunits = [];
             for (let i = 0; i < subunits.length; i++) {
-                if (subunits[i].properties["STATEFP"] == '25') {
+                if (parseInt(subunits[i].properties["STATEFP"]) <= 56) {
+                // if (parseInt(subunits[i].properties["STATEFP"]) == 78) {
                     tmpunits.push(subunits[i]);
                 }
             }
@@ -25,26 +65,35 @@ var width = 1024,
                 return parseFloat(s1.properties["INTPTLON"].slice(1)) - parseFloat(s2.properties["INTPTLON"].slice(1));
                 // return parseFloat(s1.properties["INTPTLON20"].slice(1)) - parseFloat(s2.properties["INTPTLON20"].slice(1))
             });
+            // subunits = subunits.slice(13);
+            // subunits = subunits.slice(0, 3221);
             console.log("len", tmpunits.length);
-            var projection = d3.geoAlbersUsa()
-                .translate([width/2 - 2000, height/2 + 400])
-                .scale(6000);
+            // var projection = d3.geoAlbersUsa();
+                // .translate([width/2 - 2000, height/2 + 400])
+                // .scale(6000);
                 //.translate([width/2-2000, height/2 + 300]) // +700 for CA
                 //.scale(5000);  
-            var map_coord = d3.geoPath()
-                .projection(projection);
-            svg.selectAll("path")
-                .data(tmpunits)
-                .enter()
-                .append("path")
-                .attr("d", map_coord); // map_coord same as: d => map_coord(d)
+            // var map_coord = d3.geoPath();
+                // .projection(projection);
+            // let path = d3.geoPath().projection(projection).context(cx);
+            
+            cx.beginPath();
+            path(topojson.mesh(us));
+            cx.stroke();
+
+            // redraw(d3.transform);
+            // svg.selectAll("path")
+            //     .data(tmpunits)
+            //     .enter()
+            //     .append("path")
+            //     .attr("d", map_coord); // map_coord same as: d => map_coord(d)
 
             console.log('rendered boundaries');
 
 
             // racial demographic data & dots for select counties
             let csvdemographics = [];
-            let dots = [];
+            dots = [];
             function genDotCoord (d, maxx, maxy, minx, miny, c, ind) {
                 let coordx = Math.random() * (maxx - minx) + minx;
                 let coordy = Math.random() * (maxy - miny) + miny;
@@ -61,23 +110,26 @@ var width = 1024,
             let load = function(error, data) {
                 // TODO: handle error case 
                 if (error) return console.warn(error);
-                // filtering demographic data for now for select counties
+                // filtering race demographic data for now for select counties
                 for (var i = 0; i < data.length; i++) {
-                    if (data[i]["STATE"] == "Massachusetts") {
-                        csvdemographics.push(data[i]);
-                    }                     
+                    // if (data[i]["STATE"] == "Alabama") {
+                    csvdemographics.push(data[i]);
+                    // }                     
                 }
+                // sort to match subunit order
                 csvdemographics.sort(function(s1, s2) {
                     // right to left
                     return parseFloat(s1["INTPTLON"].slice(1)) - parseFloat(s2["INTPTLON"].slice(1));
                     // return parseFloat(s1.properties["INTPTLON20"].slice(1)) - parseFloat(s2.properties["INTPTLON20"].slice(1))
                 });
+                // check same length
                 console.log("len2", csvdemographics.length);
-                // change tmpunits later to subunits
+
+                // note to self: change tmpunits later to subunits
                 for (let i = 0; i < tmpunits.length; i++) {
                     // county is used to get coordinates
                     let county = tmpunits[i];    
-                    // get length of this for index 7
+                    // // get length of this for index 7
                     // console.log("index", i);
                     // console.log(county.geometry.coordinates);
                     let maxx = Math.max(...county.geometry.coordinates["0"].map(o => o[0]));
@@ -122,32 +174,32 @@ var width = 1024,
                         switch(race) {
                             case WHITE:
                                 // light gray
-                                return "rgb(155, 153, 153)";
+                                return "light gray";
                             case BLACK:
                                 // yellow
-                                return "rgb(255, 255, 0)";
+                                return "yellow";
                             case NATIVE_AMER:
                                 // light blue
-                                return "rgb(0, 255, 255)";
+                                return "light blue";
                             case ASIAN:
                                 // red
-                                return "rgb(255, 0, 0)";
+                                return "red";
                             case PACIFIC_ISL:
                                 // green
-                                return "rgb(0, 255, 0)";
+                                return "green";
                             case OTHER: 
                                 // blue
-                                return "rgb(0, 0, 255)";
+                                return "blue";
                             case TWO_PLUS: 
                                 // lavender
-                                return "rgb(230,230,250)";
+                                return "lavender";
                             default:
-                                return "rgb(0, 0, 0)";
+                                return "black";
                         }
                     }
                     let races = [WHITE, BLACK, NATIVE_AMER, ASIAN, PACIFIC_ISL, OTHER, TWO_PLUS];
                     for (let r = 0; r < races.length; r++) {
-                        for (let j = 0; j < parseInt(csvdemographics[i][races[r]])/1000; j++) {
+                        for (let j = 0; j < parseInt(csvdemographics[i][races[r]])/100000; j++) {
                             let coord = genDotCoord(county, maxx, maxy, minx, miny, getColor(races[r]), r);
                             dots.push(coord);
                         }
@@ -155,18 +207,33 @@ var width = 1024,
                     }
                 }
                 // plot dots
-                svg.selectAll('circle')
-                .data(dots)
-                .enter()
-                .append('circle')
-                .style('fill', data => data[2])
-                .attr('class', data => data[3])
-                .attr('r', 1)
-                .attr('transform', function(data) {return "translate(" + projection(data) + ")";});
+                for (let i = 0; i < dots.length; i++) {
+                    // cx.fillStyle = "red";
+                    // cx.arc(50, 50, 40, 0, 7);
+                    // cx.fill();
+                    // cx.fillStyle = dots[i][2];
+                    cx.beginPath();
+                    cx.fillStyle = dots[i][2];
+                    let coord  = (projection(dots[i].slice(0,2)));
+                    cx.arc(coord[0], coord[1], 1, 0, 7);
+                    cx.fill();
+                }
+
+                console.log("circles");
+                
+                // svg.selectAll('circle')
+                // .data(dots)
+                // .enter()
+                // .append('circle')
+                // .style('fill', data => data[2])
+                // .attr('class', data => data[3])
+                // .attr('r', 1)
+                // .attr('transform', function(data) {return "translate(" + projection(data) + ")";});
             }
 
             d3.csv("county.csv", load);
            
+            // notes:
             // give coord to get pixel
             // console.log(projection([-141.190,52.4739]));
             // pixel to coord

@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
-var data = document.getElementById('data');
-// var data = document.getElementsByClassName('6');
+// var data = document.getElementById('data');
+var data = document.getElementsByClassName('6');
 
 var text;
 console.log(data);
@@ -32,7 +32,7 @@ function setValue() {
     // if (data.length == 0) {
     //     data = document.getElementsByClassName('6');
     // }
-    data.style.color = text.color;
+    data.style.fill = text.color;
     // data.style.fontSize = text.fontSize+"px";
     // data.style.fontFamily = text.fontFamily;
     // if(text.border) {
