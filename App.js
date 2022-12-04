@@ -1,11 +1,12 @@
 document.addEventListener("DOMContentLoaded", function() {
-    var data1 = document.getElementById("white");
-    var data2 = document.getElementById("black");
-    var data3 = document.getElementById("native");
-    var data4 = document.getElementById("asian");
-    var data5 = document.getElementById("pacific");
-    var data6 = document.getElementById("other");
-    var data7 = document.getElementById("three");
+    var dataarr = new Array(document.getElementById("asian"),
+                            document.getElementById("black"), 
+                            document.getElementById("hispanic"),
+                            document.getElementById("native"),
+                            document.getElementById("other"),
+                            document.getElementById("pacific"),
+                            document.getElementById("white"), 
+                            document.getElementById("three"));
 
     // initialization
     var colorPicker = function(c) {
@@ -19,22 +20,21 @@ document.addEventListener("DOMContentLoaded", function() {
 
     //GUI
     window.onload = function() {
-        white = new colorPicker("#5d83d9");
-        black = new colorPicker("#eb3232");
-        native = new colorPicker("#5ec59b");
-        asian = new colorPicker("#ed61bd");
-        pacific = new colorPicker("#de8446");
-        other = new colorPicker("#c2d24d");
-        three = new colorPicker("#d179ff");
+        arr = new Array (
+                new colorPicker("#ed61bd"), //asian
+                new colorPicker("#eb3232"), //black
+                new colorPicker("#2aa6bb"), //hispanic
+                new colorPicker("#5ec59b"), //native
+                new colorPicker("#c2d24d"), //other
+                new colorPicker("#de8446"), //pacific
+                new colorPicker("#5d83d9"), // white
+                new colorPicker("#d179ff"), // three
+        ); 
         setValue();
         var gui = new dat.GUI();
-        gui.addColor(white, 'color').onChange(setValue);
-        gui.addColor(black, 'color').onChange(setValue);
-        gui.addColor(native, 'color').onChange(setValue);
-        gui.addColor(asian, 'color').onChange(setValue);
-        gui.addColor(pacific, 'color').onChange(setValue);
-        gui.addColor(other, 'color').onChange(setValue);
-        gui.addColor(three, 'color').onChange(setValue);
+        for (let i = 0; i < arr.length; i++) {
+            gui.addColor(arr[i], 'color').onChange(setValue);
+        }
 
         // gui.add(text, 'message').onChange(setValue);
         // gui.add(text, 'fontSize', 6, 48).onChange(setValue);
@@ -43,13 +43,17 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 
     function setValue() {
-        data1.style.color = white.color;
-        data2.style.color = black.color;
-        data3.style.color = native.color;
-        data4.style.color = asian.color;
-        data5.style.color = pacific.color;
-        data6.style.color = other.color;
-        data7.style.color = three.color;
+        for (let i = 0; i < arr.length; i++) { 
+            dataarr[i].style.color = arr[i].color;
+        }
+        // data1.style.color = white.color;
+        // data2.style.color = black.color;
+        // data8.style.color = hispanic.color;
+        // data3.style.color = native.color;
+        // data4.style.color = asian.color;
+        // data5.style.color = pacific.color;
+        // data6.style.color = other.color;
+        // data7.style.color = three.color;
 
         // data.innerHTML = text.message;
         // if (data.length == 0) {

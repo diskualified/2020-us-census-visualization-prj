@@ -2,6 +2,7 @@ var width = 1024,
     height = 800;
 
 function calc_colors() {
+    // color conversion helper functions:
     const toRGBArray = rgbStr => rgbStr.match(/\d+/g).map(Number);
     function componentToHex(c) {
         var hex = c.toString(16);
@@ -27,10 +28,30 @@ function calc_colors() {
     
     var basecolors = basecolors.map(c => toRGBArray(c));
     var finalcolors = basecolors.map(c => rgbToHex(c));
+    finalcolors.splice(2, 0, rgbToHex(toRGBArray(document.getElementById("hispanic").style.color)));
     finalcolors.push(rgbToHex(toRGBArray(document.getElementById("three").style.color)));
 
+    // reset color display/print out
     var div = document.getElementById('colors');
     div.innerHTML = "";
+
+    // calc afro-latino color outside of loop
+    // var m = colorMixer(toRGBArray(document.getElementById("hispanic").style.color), basecolors[1]);
+    // var afrolatin = rgbToHex(m);
+    // finalcolors.push(afrolatin);
+    // var p = document.createElement("p");
+    // p.innerHTML = "Afro-Latino" + ": " + afrolatin;
+    // p.style.color = afrolatin;
+    // div.append(p);      
+    // hard-coding afro-latino color for now:
+    let c = "#806ede";
+    finalcolors.push(c);
+    var p = document.createElement("p");
+    p.innerHTML = "Afro-Latino" + ": " + c;
+    p.style.color = c;
+    div.append(p);      
+    
+
     for (let i = 0; i < basecolors.length - 1; ++i) {
         for (let j = i + 1; j < basecolors.length; ++ j) {
             var color1 = basecolors[i];
@@ -45,6 +66,7 @@ function calc_colors() {
             div.append(p);        
         }
     }
+    // display calculated color in kepler legend order
     var p = document.createElement("p");
     p.innerHTML = "\"" + finalcolors.join("\",<br />\"") + "\"";
     div.append(p);
@@ -183,7 +205,37 @@ function dload() {
                 const ASIAN_PACIFIC = "U7B023";
                 const ASIAN_OTHER = "U7B024";
                 const PACIFIC_OTHER = "U7B025";
-                const THREE_PLUS = "U7B026";
+                const THREE = "U7B026";
+                const FOUR = "U7B047";
+                const FIVE = "U7B063";
+                const SIX = "U7B070";
+
+                const LWHITE = "U7C005";
+                const LBLACK = "U7C006";
+                const LNATIVE_AMER = "U7C007";
+                const LASIAN = "U7C008";
+                const LPACIFIC_ISL = "U7C009";
+                const LOTHER = "U7C010";
+                // const TWO_PLUS = "U7C009";
+                const LWHITE_BLACK = "U7C013";
+                const LWHITE_NATIVE = "U7C014";
+                const LWHITE_ASIAN = "U7C015";
+                const LWHITE_PACIFIC = "U7C016";
+                const LWHITE_OTHER = "U7C017";
+                const LBLACK_NATIVE = "U7C018";
+                const LBLACK_ASIAN = "U7C019";
+                const LBLACK_PACIFIC = "U7C020";
+                const LBLACK_OTHER = "U7C021";
+                const LNATIVE_ASIAN = "U7C022";
+                const LNATIVE_PACIFIC = "U7C023";
+                const LNATIVE_OTHER = "U7C024";
+                const LASIAN_PACIFIC = "U7C025";
+                const LASIAN_OTHER = "U7C026";
+                const LPACIFIC_OTHER = "U7C027";
+                const LTHREE = "U7C028";
+                const LFOUR = "U7C049";
+                const LFIVE = "U7C065";
+                const LSIX = "U7C072";
 
 
                 function getRace(race) {
@@ -236,7 +288,16 @@ function dload() {
                             return "Asian and Other";
                         case PACIFIC_OTHER:
                             return "Other and Pacific Islander";
-                        case THREE_PLUS: 
+                        case THREE: 
+                            // lavender
+                            return "3+ races";
+                        case FOUR: 
+                            // lavender
+                            return "3+ races";
+                        case FIVE: 
+                            // lavender
+                            return "3+ races";
+                        case SIX: 
                             // lavender
                             return "3+ races";
                         default:
@@ -247,20 +308,39 @@ function dload() {
                     WHITE_BLACK, WHITE_NATIVE, WHITE_ASIAN, WHITE_PACIFIC, WHITE_OTHER,
                     BLACK_NATIVE, BLACK_ASIAN, BLACK_PACIFIC, BLACK_OTHER,
                     NATIVE_ASIAN, NATIVE_PACIFIC, NATIVE_OTHER, 
-                    ASIAN_PACIFIC, ASIAN_OTHER, PACIFIC_OTHER, THREE_PLUS];
+                    ASIAN_PACIFIC, ASIAN_OTHER, PACIFIC_OTHER, THREE, FOUR, FIVE, SIX];
+                let lraces = [LWHITE, LBLACK, LNATIVE_AMER, LASIAN, LPACIFIC_ISL, LOTHER, 
+                    LWHITE_BLACK, LWHITE_NATIVE, LWHITE_ASIAN, LWHITE_PACIFIC, LWHITE_OTHER,
+                    LBLACK_NATIVE, LBLACK_ASIAN, LBLACK_PACIFIC, LBLACK_OTHER,
+                    LNATIVE_ASIAN, LNATIVE_PACIFIC, LNATIVE_OTHER, 
+                    LASIAN_PACIFIC, LASIAN_OTHER, LPACIFIC_OTHER, LTHREE, LFOUR, LFIVE, LSIX];
 
                 console.log(csvdemographics[i]["COUNTY"]);
                 for (let r = 0; r < races.length; r++) {
-                    for (let j = 0; j < parseInt(csvdemographics[i][races[r]])/1000; j++) {
-                                                                                    // string, index, number
-                        let coordinfo = genDotCoord(county, maxx, maxy, minx, miny, getRace(races[r]), r, races.length);
-                        if (i == tmpunits.length - 1 && r == races.length - 1 && j == Math.ceil(parseInt(csvdemographics[i][races[r]])/1000) - 1) {
-                            coordinfo[4] = (coordinfo[4].toString() + "`;");
-                        }
+                    let racecount_per_county = parseInt(csvdemographics[i][races[r]]);
+                    let nonhispanic_count = parseInt(csvdemographics[i][lraces[r]]);
+                    let hispanic_count = racecount_per_county - nonhispanic_count;
+                    // console.log("total", racecount_per_county);
+                    // console.log("hispanic", hispanic_count);
+                    // console.log("nonhispanic", nonhispanic_count);
+
+                    for (let j = 0; j < nonhispanic_count/1000; j++) {
+                                                                                    // string, index, number for random alt
+                        let coordinfo = genDotCoord(county, maxx, maxy, minx, miny, getRace(races[r]), r, races.length + 2);
                         dots.push(coordinfo);
                     }
+                    for (let j = 0; j < hispanic_count/1000; j++) {
+                                                                                                     // string, index, number for random alt
+                        let coordinfo = (r != 1) ? genDotCoord(county, maxx, maxy, minx, miny,"1Hispanic/Latino", r, races.length + 2) : genDotCoord(county, maxx, maxy, minx, miny,"Afro-Latino", r, races.length + 2);
+
+                        dots.push(coordinfo);
+                    }
+                    // if (i == tmpunits.length - 1 && r == races.length - 1) {
+                    //     dots.at(-1)[4] = (dots.at(-1)[4].toString() + "`;");
+                    // }
                 }
             }
+            dots.at(-1)[4] = (dots.at(-1)[4].toString() + "`;");
 
             // download dots data file
             let csvContent = "data:text/csv;charset=utf-8," 
@@ -291,7 +371,7 @@ function dload() {
             }
             console.log("circles");
         }
-        d3.csv("county.csv", load);
+        d3.csv("countywhispanic.csv", load);
         
         // notes:
         // give coord to get pixel

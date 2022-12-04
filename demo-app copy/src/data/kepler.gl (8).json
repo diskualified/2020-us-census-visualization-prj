@@ -45,7 +45,7 @@
             },
             "isVisible": true,
             "visConfig": {
-              "radius": 4.5,
+              "radius": 2.8,
               "fixedRadius": false,
               "opacity": 0.8,
               "outline": false,
@@ -58,11 +58,13 @@
                 "colors": [
                   "#ed61bd",
                   "#eb3232",
+                  "#2aa6bb",
                   "#5ec59b",
                   "#c2d24d",
                   "#de8446",
                   "#5d83d9",
                   "#d179ff",
+                  "#806ede",
                   "#ec4977",
                   "#a593ac",
                   "#d79985",

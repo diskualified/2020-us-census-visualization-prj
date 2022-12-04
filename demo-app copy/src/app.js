@@ -62,7 +62,8 @@ import sampleIconCsv, {config as savedMapConfig} from './data/sample-icon-csv';
 import sampleGpsData from './data/sample-gps-data';
 
 import {processCsvData, processGeojson} from 'kepler.gl/processors';
-import usdata from './data/my_data1000.csv';
+// import usdata from './data/my_data1000.csv';
+import usdata from './data/dot_data.csv';
 import Button from './button';
 import Processors from 'kepler.gl/processors';
 import usconfig from './data/kepler.gl (8).json';
