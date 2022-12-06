@@ -112,8 +112,8 @@ function dload() {
 
         console.log('rendered boundaries');
 
-        // racial demographic data & dots for select counties
-        let csvdemographics = [];
+
+
 
         // helper for getting/formatting dot data
         function genDotCoord (d, maxx, maxy, minx, miny, c, ind, num) {
@@ -128,6 +128,8 @@ function dload() {
             return [coordx, coordy, color, ind, Math.floor(Math.random() * num)];
         };
 
+        // racial demographic data & dots for select counties
+        let csvdemographics = [];
 
         let load = function(error, data) {
             // handle error case 
@@ -165,6 +167,7 @@ function dload() {
                     maxy = -Infinity;
                     minx = Infinity;
                     miny = Infinity;
+                    // for edge case of county having multiple bounding boxes
                     for (let i = 0; i < county.geometry.coordinates.length; i++) {
                         let newmaxx = Math.max(...county.geometry.coordinates[i.toString()][0].map(o => o[0]));
                         if (newmaxx > maxx) {
@@ -185,7 +188,7 @@ function dload() {
                     }
                 }
 
-                // get corresponding racial demographic data
+                // get corresponding racial demographic data - corresponding indices in the csv file
                 const WHITE = "U7B003";
                 const BLACK = "U7B004";
                 const NATIVE_AMER = "U7B005";
@@ -219,7 +222,6 @@ function dload() {
                 const LASIAN = "U7C008";
                 const LPACIFIC_ISL = "U7C009";
                 const LOTHER = "U7C010";
-                // const TWO_PLUS = "U7C009";
                 const LWHITE_BLACK = "U7C013";
                 const LWHITE_NATIVE = "U7C014";
                 const LWHITE_ASIAN = "U7C015";
@@ -244,22 +246,16 @@ function dload() {
                 function getRace(race) {
                     switch(race) {
                         case WHITE:
-                            // light gray
                             return "1White";
                         case BLACK:
-                            // yellow
                             return "1Black";
                         case NATIVE_AMER:
-                            // light blue
                             return "1Native American";
                         case ASIAN:
-                            // red
                             return "1Asian";
                         case PACIFIC_ISL:
-                            // green
                             return "1Pacific Islander";
                         case OTHER: 
-                            // blue
                             return "1Other Single Race";
                         case WHITE_BLACK:
                             return "Black and White";
@@ -292,16 +288,12 @@ function dload() {
                         case PACIFIC_OTHER:
                             return "Other and Pacific Islander";
                         case THREE: 
-                            // lavender
                             return "3+ races";
                         case FOUR: 
-                            // lavender
                             return "3+ races";
                         case FIVE: 
-                            // lavender
                             return "3+ races";
                         case SIX: 
-                            // lavender
                             return "3+ races";
                         default:
                             return "Unknown";
@@ -338,9 +330,6 @@ function dload() {
 
                         dots.push(coordinfo);
                     }
-                    // if (i == USbounds.length - 1 && r == races.length - 1) {
-                    //     dots.at(-1)[4] = (dots.at(-1)[4].toString() + "`;");
-                    // }
                 }
             }
             dots.at(-1)[4] = (dots.at(-1)[4].toString() + "`;");
