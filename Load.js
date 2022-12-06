@@ -76,34 +76,36 @@ function calc_colors() {
 
 function dload() {
     document.getElementById("loading").innerHTML = "Loading...";
-
     let canvas = document.querySelector("canvas");
+
     let cx = canvas.getContext("2d");
     var projection = d3.geoAlbersUsa();
-    var globalUS;
     let path = d3.geoPath().projection(projection).context(cx);
+
+    var globalUS;
     let dots = [["export default `Longitude","Latitude","Race","Race Num","Alt"]];
-    // with county json file
+
+    // use county json file
     d3.json("tl_2020_us_county.json", function(error, us) {
     // d3.json("tl_2020_25MA_tabblock20.json", function(error, us) {
         if (error) return console.error(error);
         globalUS = us;
-        // subunits is all county boundaries
-        var subunits = topojson.feature(us, us.objects.tl_2020_us_county).features;
+        // bounds = all county boundaries in topojson
+        var bounds = topojson.feature(us, us.objects.tl_2020_us_county).features;
 
-        // choose which counties/blocks to display
-        var tmpunits = [];
-        for (let i = 0; i < subunits.length; i++) {
-            if (parseInt(subunits[i].properties["STATEFP"]) <= 56) {
-                tmpunits.push(subunits[i]);
+        // select to display only counties in US States to display 
+        var USbounds = [];
+        for (let i = 0; i < bounds.length; i++) {
+            if (parseInt(bounds[i].properties["STATEFP"]) <= 56) {
+                USbounds.push(bounds[i]);
             }
         }
-        tmpunits.sort(function(s1, s2) {
+        USbounds.sort(function(s1, s2) {
             // sorts right to left
             return parseFloat(s1.properties["INTPTLON"].slice(1)) - parseFloat(s2.properties["INTPTLON"].slice(1));
             // return parseFloat(s1.properties["INTPTLON20"].slice(1)) - parseFloat(s2.properties["INTPTLON20"].slice(1))
         });
-        console.log("len", tmpunits.length);
+        // console.log("len", USbounds.length);
         cx.beginPath();
         path(topojson.mesh(us));
         cx.stroke();
@@ -113,6 +115,7 @@ function dload() {
         // racial demographic data & dots for select counties
         let csvdemographics = [];
 
+        // helper for getting/formatting dot data
         function genDotCoord (d, maxx, maxy, minx, miny, c, ind, num) {
             let coordx = Math.random() * (maxx - minx) + minx;
             let coordy = Math.random() * (maxy - miny) + miny;
@@ -146,10 +149,10 @@ function dload() {
             // check same length as above
             console.log("len2", csvdemographics.length);
 
-            for (let i = 0; i < tmpunits.length; i++) {
+            for (let i = 0; i < USbounds.length; i++) {
                 // county is used to get coordinates
-                // console.log(i, tmpunits[i]["properties"]["NAMELSAD"]);
-                let county = tmpunits[i];    
+                // console.log(i, USbounds[i]["properties"]["NAMELSAD"]);
+                let county = USbounds[i];    
                 // // get length of this for index 7
                 // console.log("index", i);
                 // console.log(county.geometry.coordinates);
@@ -335,7 +338,7 @@ function dload() {
 
                         dots.push(coordinfo);
                     }
-                    // if (i == tmpunits.length - 1 && r == races.length - 1) {
+                    // if (i == USbounds.length - 1 && r == races.length - 1) {
                     //     dots.at(-1)[4] = (dots.at(-1)[4].toString() + "`;");
                     // }
                 }

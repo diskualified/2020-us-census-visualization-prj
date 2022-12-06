@@ -66,7 +66,7 @@ import {processCsvData, processGeojson} from 'kepler.gl/processors';
 import usdata from './data/dot_data.csv';
 import Button from './button';
 import Processors from 'kepler.gl/processors';
-import usconfig from './data/kepler.gl (8).json';
+import usconfig from './data/kepler.gl.json';
 import KeplerGL from 'kepler.gl';
 import KeplerGlSchema from 'kepler.gl/schemas';
 import downloadJsonFile from "./file-download";
